@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "cauldron": {
+      "type": "http",
+      "url": "${user_config.cauldron_url}/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${user_config.cauldron_api_key}"
+      }
+    }
+  }
+}

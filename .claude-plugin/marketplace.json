@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cauldron",
+  "description": "Official Cauldron plugins and skills for AI agents.",
+  "owner": {
+    "name": "Cauldron",
+    "url": "https://opencauldron.ai"
+  },
+  "plugins": [
+    {
+      "name": "cauldron",
+      "source": "./",
+      "category": "design",
+      "description": "Cauldron in your terminal — generate images, search your Library, and read brand kits over the Cauldron MCP, with a skill that gets model choice, brand scoping, and spend right."
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "cauldron",
+  "version": "1.2.0",
+  "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images over the Cauldron MCP. 15 tools scoped to your user + studio by a personal API key. Ships a skill covering model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
+  "author": {
+    "name": "Cauldron",
+    "url": "https://opencauldron.ai"
+  },
+  "homepage": "https://docs.opencauldron.ai/guides/connected-ai-tools/",
+  "repository": "https://github.com/cauldronstudio/skills",
+  "license": "MIT",
+  "keywords": ["cauldron", "image-generation", "dam", "digital-asset-management", "brand-kit", "mcp"],
+  "userConfig": {
+    "cauldron_api_key": {
+      "type": "string",
+      "title": "Cauldron API key",
+      "description": "Personal key from Cauldron -> Profile -> Connected AI Tools -> Create key. Starts with oc_ and is shown once, so copy it then. A key is pinned to ONE studio: if you work in several, make one per studio. Revoke any time from the same card; leaving a studio kills its key automatically. Stored in your OS keychain, never in settings.json.",
+      "sensitive": true,
+      "required": true
+    },
+    "cauldron_url": {
+      "type": "string",
+      "title": "Cauldron studio URL",
+      "description": "Base URL of the studio the MCP tools talk to. Leave the default unless you are pointing at a self-hosted install.",
+      "default": "https://studio.opencauldron.ai",
+      "required": false
+    }
+  }
+}
