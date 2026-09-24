@@ -1,6 +1,6 @@
 {
   "name": "cauldron",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images over the Cauldron MCP. 15 tools scoped to your user + studio by a personal API key. Ships a skill covering model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
   "author": {
     "name": "Cauldron",
@@ -21,7 +21,7 @@
     "cauldron_url": {
       "type": "string",
       "title": "Cauldron studio URL",
-      "description": "Base URL of the studio the MCP tools talk to. Leave the default unless you are pointing at a self-hosted install.",
+      "description": "Base URL of the studio the MCP tools talk to. Leave the default.",
       "default": "https://studio.opencauldron.ai",
       "required": false
     }
