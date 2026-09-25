@@ -1,6 +1,6 @@
 # Cauldron skills
 
-Plugins and skills that connect AI agents to [Cauldron](https://opencauldron.ai):
+Plugins and skills that connect AI agents to [Cauldron](https://cauldron.studio):
 generate images, search your Library, read brand kits, and upscale, extend,
 resize, or cut out images without leaving your editor.
 
@@ -21,7 +21,7 @@ npx skills add cauldronstudio/skills
 ```
 
 This installs the skill only. Connect the MCP server yourself: it's a streamable
-HTTP server at `https://studio.opencauldron.ai/api/mcp`, authenticated with an
+HTTP server at `https://app.cauldron.studio/api/mcp`, authenticated with an
 `Authorization: Bearer oc_…` header.
 
 ## Getting a key
@@ -30,7 +30,7 @@ In Cauldron, open **Profile → Connected AI Tools → Create key**. The key sta
 with `oc_` and is shown once. Each key is pinned to one studio.
 
 The full guide covers what each tool does, what spends credits, and
-troubleshooting: https://docs.opencauldron.ai/guides/connected-ai-tools/
+troubleshooting: https://docs.cauldron.studio/guides/connected-ai-tools/
 
 ## License
 

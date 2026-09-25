@@ -23,13 +23,13 @@ guessing at tool calls.
      `/plugin install cauldron@cauldron`. It prompts for the key and stores it
      in the OS keychain.
    - Claude Code without the plugin:
-     `claude mcp add --transport http cauldron https://studio.opencauldron.ai/api/mcp --header "Authorization: Bearer oc_…"`
+     `claude mcp add --transport http cauldron https://app.cauldron.studio/api/mcp --header "Authorization: Bearer oc_…"`
    - Any other MCP client: a streamable HTTP server at
-     `https://studio.opencauldron.ai/api/mcp` with the header
+     `https://app.cauldron.studio/api/mcp` with the header
      `Authorization: Bearer oc_…`.
 3. **Restart or reconnect** the client so it picks up the tool list.
 
-Full guide: https://docs.opencauldron.ai/guides/connected-ai-tools/
+Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 
 ## The tools
 

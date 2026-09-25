@@ -4,7 +4,7 @@
   "description": "Official Cauldron plugins and skills for AI agents.",
   "owner": {
     "name": "Cauldron",
-    "url": "https://opencauldron.ai"
+    "url": "https://cauldron.studio"
   },
   "plugins": [
     {
