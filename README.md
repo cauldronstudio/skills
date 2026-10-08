@@ -12,7 +12,7 @@ resize, or cut out images without leaving your editor.
 ```
 
 The install asks for your API key and stores it in your OS keychain. The plugin
-bundles the Cauldron MCP server and the `cauldron` skill.
+bundles the Cauldron MCP server and two skills: `cauldron` and `migrate` (move a Dropbox library into Cauldron).
 
 ## Other agents (Cursor, Codex, and the rest)
 

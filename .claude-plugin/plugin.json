@@ -1,7 +1,7 @@
 {
   "name": "cauldron",
-  "version": "1.3.0",
-  "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images over the Cauldron MCP. 15 tools scoped to your user + studio by a personal API key. Ships a skill covering model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
+  "version": "1.4.0",
+  "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images, and import folders from Dropbox over the Cauldron MCP. 23 tools scoped to your user + studio by a personal API key. Ships skills covering migrations, model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
   "author": {
     "name": "Cauldron",
     "url": "https://cauldron.studio"
