@@ -1,11 +1,11 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 24 tools. Everything is
+The Cauldron MCP exposes a Cauldron studio as 25 tools. Everything is
 scoped to the (user, studio) pair the API key was minted for — no argument
 reaches another studio's data.
 
@@ -41,6 +41,14 @@ Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 to the Library as a new asset: `upscale_image`, `remove_background`,
 `extend_image` (each a small provider cost), and `resize_image` (local, free).
 Re-running one returns the existing output instead of spending again.
+
+**Upload** (free, no spend) — `upload_asset` puts a file INTO a brand's Library
+so the tools above have something to act on: pass `url` (an https URL the
+server fetches; public hosts only) or `data_base64` + `file_name` (a local
+file, up to 10 MB), plus `brand_id` and optional `tags`. It returns the new
+`asset_id`. The same URL into the same brand twice returns the existing asset
+(`reused: true`). This is how "resize our logo to 1200×1200" works end to end:
+`upload_asset` → `resize_image`.
 
 **Imports** (free, no spend) — bring folders in from Dropbox: `dropbox_status`,
 `dropbox_browse`, `dropbox_scan`, `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`,
@@ -122,3 +130,4 @@ it.
 | async/video refusal | Model isn't sync-image. The message lists valid ones. |
 | `does not accept reference images` | You passed `image_refs` to a model without `supportsImageInput`. Pick another; don't drop the reference. |
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
+| `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
