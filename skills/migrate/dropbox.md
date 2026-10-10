@@ -9,8 +9,9 @@ import from Dropbox.
 | Tool | What it does |
 |---|---|
 | `dropbox_status` | Connected or not, which Dropbox account, and any import running or last finished. |
-| `dropbox_scan` | Starts reading one space: `personal` or `team`. Returns a `scanId`. |
-| `dropbox_get_scan` | Polls a scan and lists one level of folders with file counts. Pass `path` to open a folder. |
+| `dropbox_browse` | Lists one folder level of a space: subfolders, and how many files sit directly there. Fast; nothing is scanned. |
+| `dropbox_scan` | Counts the folders the person picked, and only those. Returns a `scanId`. |
+| `dropbox_get_scan` | Polls a scan: the picked folders with their counts as they finish. |
 | `dropbox_preview` | What an import of the chosen folders would do. Copies nothing. |
 | `dropbox_import` | Starts the import. Returns an `importId`. |
 | `get_import_status` | Counts, failed files with reasons, and where the files landed. |
@@ -28,14 +29,20 @@ None of these spend credits.
    - `needsReconnect: true`: same, the connection ended and needs renewing.
    - `activeImport` is set: an import is already running. Offer to check on it
      with `get_import_status` before starting another.
-2. `dropbox_scan` with `space`. Use `personal` unless the account has a team
-   space (`account.hasTeamSpace`) and the person says the files are there. A
-   scan reads the whole space; folders are chosen later.
-3. `dropbox_get_scan` until `status` is `complete`. Show the folders. A folder
-   with `state: "too_big"` can't be taken whole: open it and choose subfolders.
-4. `dropbox_preview` with `scan_id`, `brand_id`, and `include` set to the folder
-   paths exactly as `dropbox_get_scan` returned them (`"."` means loose files in
-   the root). Optional: `exclude`, `flatten_depth`, `keep_duplicates`.
+2. `dropbox_browse` with `space` (and no `path`) to list the root. Use
+   `personal` unless the account has a team space (`account.hasTeamSpace`) and
+   the person says the files are there. Show the folders and ask which ones to
+   bring in. Open a folder with `path` when asked; don't open every folder.
+   `more: true` means the level had over 2,000 entries: ask for the folder's
+   name and browse to it by path instead of paging. A row with
+   `importedBefore: true` has files that are already in Cauldron.
+3. `dropbox_scan` with `space` and `folders`: the paths of the picked folders,
+   exactly as `dropbox_browse` returned them. Never scan a whole space; one
+   shoot or project at a time is the normal case. Then `dropbox_get_scan`
+   until `status` is `complete`. A folder with `state: "too_big"` passed the
+   100,000-file cap: pick its subfolders instead.
+4. `dropbox_preview` with `scan_id`, `brand_id`, and `include` set to the same
+   folder paths (`"."` means loose files in the root). Optional: `exclude`, `flatten_depth`, `keep_duplicates`.
    - `canImport: false`: relay `blocked` and stop.
    - `earlierImports` is not empty: some of these files came in before. Ask
      whether to add to that collection (recommended) or make a new one. Either

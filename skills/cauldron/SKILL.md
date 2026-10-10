@@ -5,7 +5,7 @@ description: Generate images and work with a Cauldron studio from the terminal v
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 23 tools. Everything is
+The Cauldron MCP exposes a Cauldron studio as 24 tools. Everything is
 scoped to the (user, studio) pair the API key was minted for — no argument
 reaches another studio's data.
 
@@ -43,7 +43,7 @@ to the Library as a new asset: `upscale_image`, `remove_background`,
 Re-running one returns the existing output instead of spending again.
 
 **Imports** (free, no spend) — bring folders in from Dropbox: `dropbox_status`,
-`dropbox_scan`, `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`,
+`dropbox_browse`, `dropbox_scan`, `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`,
 `get_import_status`, `resume_import`, `cancel_import`. Use the `migrate` skill
 for the flow; an import starts only after the person confirms its preview.
 
