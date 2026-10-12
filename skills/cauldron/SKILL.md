@@ -1,11 +1,11 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 25 tools. Everything is
+The Cauldron MCP exposes a Cauldron studio as 28 tools. Everything is
 scoped to the (user, studio) pair the API key was minted for — no argument
 reaches another studio's data.
 
@@ -54,6 +54,26 @@ file, up to 10 MB), plus `brand_id` and optional `tags`. It returns the new
 `dropbox_browse`, `dropbox_scan`, `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`,
 `get_import_status`, `resume_import`, `cancel_import`. Use the `migrate` skill
 for the flow; an import starts only after the person confirms its preview.
+
+**Settings** (free, no spend) — `get_settings` returns your role, the brands
+you can edit (name, description, website, location, self-approval, Slack
+channel, video, community flags, prompt prefix/suffix, banned terms), whether
+Slack is connected, and the studio settings (owners and admins only). Pass
+`brand_id` for one brand. `update_brand_settings` takes `brand_id` plus only the
+fields to change; slug, NSFW, colours and the rest of the guide are refused.
+`update_studio_settings` takes `name` and/or `slack_channel_id`, always for the
+key's own studio.
+
+- Who can: studio owners and admins edit everything; a member edits only
+  brands they manage, and `update_studio_settings` is owner/admin only. Guests
+  never can.
+- Slack connect and disconnect stay in the browser. These tools never touch
+  the Slack token. If `get_settings` says Slack isn't connected, relay its
+  `how_to_connect` instead of retrying.
+- A channel is an ID (`C…` or `G…`), not a `#name`, and the bot must be in it
+  first (`/invite @Cauldron`). A changed channel gets a test post; if that
+  fails nothing is saved. `slack_channel_id: null` on a brand falls back to the
+  studio default; on the studio it turns updates off.
 
 **Spend**: `enhance_prompt` (small per-call model cost), `generate_image`
 (provider cost per image).
@@ -131,3 +151,5 @@ it.
 | `does not accept reference images` | You passed `image_refs` to a model without `supportsImageInput`. Pick another; don't drop the reference. |
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
+| `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, a member who doesn't manage it, or it's a Personal brand. |
+| `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
