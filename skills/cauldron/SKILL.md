@@ -1,13 +1,13 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 28 tools. Everything is
-scoped to the (user, studio) pair the connection was made for — no argument
-reaches another studio's data.
+The Cauldron MCP exposes a Cauldron studio as 33 tools, 38 when the server has
+pics.io import turned on. Everything is scoped to the (user, studio) pair the
+connection was made for — no argument reaches another studio's data.
 
 ## Setup
 
@@ -51,10 +51,31 @@ file, up to 10 MB), plus `brand_id` and optional `tags`. It returns the new
 (`reused: true`). This is how "resize our logo to 1200×1200" works end to end:
 `upload_asset` → `resize_image`.
 
-**Imports** (free, no spend) — bring folders in from Dropbox: `dropbox_status`,
-`dropbox_browse`, `dropbox_scan`, `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`,
-`get_import_status`, `resume_import`, `cancel_import`. Use the `migrate` skill
-for the flow; an import starts only after the person confirms its preview.
+**Imports** (free, no spend). Every import runs on Cauldron's servers in the
+background and returns an import id at once. Files land as drafts. Use the
+`migrate` skill for the Dropbox flow; any import starts only after the person
+confirms what it will do.
+
+- **Dropbox**: `dropbox_status`, `dropbox_browse`, `dropbox_scan`,
+  `dropbox_get_scan`, `dropbox_preview`, `dropbox_import`.
+- **pics.io** (listed only when the server has pics.io import on):
+  `picsio_status`, `picsio_scan`, `picsio_get_scan`, `picsio_preview`,
+  `picsio_import`. See "pics.io" below.
+- **Files on disk** (a migration with no source API, or any large batch):
+  `presign_uploads` → PUT the bytes → `import_assets`. See "Files on disk" below.
+- **Any import**, whichever tool started it: `get_import_status` (counts,
+  failed files with reasons, where they landed; poll every 20 to 30 seconds
+  until `finished` is true), `resume_import` (retries only failed and waiting
+  files, or resumes a `paused` import after the person reconnects),
+  `cancel_import` (files already imported stay; ask the person first). They
+  take `import_id`.
+
+**Share links** (free) — `list_shared_collection` with a `collection_id` (from
+`search`) lists every asset on a collection's share link with a `previewUrl` (a
+small JPEG that works in a Google Sheets `=IMAGE()`) and a `downloadUrl` (the
+original; null until the asset is approved). The links don't expire; they stop
+when the share link is turned off or reset. The collection must already be
+shared in Cauldron and you must be able to manage it.
 
 **Settings** (free, no spend) — `get_settings` returns your role, the brands
 you can edit (name, description, website, location, self-approval, Slack
@@ -78,6 +99,82 @@ key's own studio.
 
 **Spend**: `enhance_prompt` (small per-call model cost), `generate_image`
 (provider cost per image).
+
+## pics.io
+
+A pics.io connection belongs to one person and one brand. You can't connect it:
+the person opens the `connectUrl` the tools return (the brand's
+**Integrations** page in Cauldron) and pastes a personal access token they make
+in pics.io under **avatar → My account → Security**. No pics.io admin needed.
+Never ask for the token in chat. Guests can't import.
+
+1. `picsio_status` with `brand_id` (a brand id or `"personal"`). `connected:
+   false` or `needsReconnect: true`: relay `connectUrl`, wait, check again.
+2. `picsio_scan` with `brand_id`, and `roots` (pics.io collection ids) to read
+   only part of the library; omit for all of it. Returns `scanId`.
+3. `picsio_get_scan` with `scan_id`, every few seconds while `status` is
+   `running`. It shows one level of the collection tree at a time with rolled-up
+   `files`, `bytes` and `cantImport`; pass `collection_id` to open one,
+   `offset`/`limit` (max 200) to page. Show the collections; let the person pick.
+4. `picsio_preview` with `scan_id`, `include` (collection ids; `"root"` is the
+   whole library), optional `exclude`, `keep_duplicates`, `include_lightboards`
+   (turns the person's private lightboards into collections the whole brand
+   sees: ask first) and `flatten_depth` (levels kept, 1 to 8). Copies nothing.
+   Show the totals, where files land, what comes with them, duplicates and
+   can't-import reasons. `canImport: false`: relay `blocked` and change the
+   selection.
+5. After a yes, `picsio_import` with the same selection and exactly one of
+   `collection_id` (from the preview's `earlierImports`) or
+   `new_collection_name` (`defaultNewCollectionName` is free). `keywords`
+   (default true) brings pics.io keywords as tags; `extra_tags` adds up to 20 of
+   your own. Returns `importId`.
+6. `get_import_status` until `finished`. Collections, keywords, description,
+   rating, details and comments come along; older versions don't. Nothing in
+   pics.io changes.
+
+One import copies up to 5,000 files from a selection of up to 20,000; for more,
+import in several runs. Two pics.io imports can run at once per person.
+
+If the person's pics.io plan has no API access, use files on disk instead.
+
+## Files on disk
+
+For a library that's already on this machine (an export from a service with no
+API, a drive of shoots), or anything too big for `upload_asset`.
+
+1. `presign_uploads` with `brand_id` (omit for Personal) and `files`: up to
+   1,000 of `{ file_name, size, mime_type? }`, `size` exact in bytes. Returns
+   `uploads` (each with a `key`) and `rejected` (unsupported type or over the
+   size limit, with a reason; skip those, the rest still go).
+2. PUT each file's bytes to its `put_url` with `Content-Type` set to its
+   `content_type` exactly. Files over 64 MB come back with `multipart` instead:
+   PUT bytes `[start, end)` to each part's `url` (no Content-Type), retry a
+   failed part on its own, keep each response's `ETag`, then
+   `complete_multipart_upload` with `key`, `upload_id` and every `part_number` +
+   `etag`. Giving up on one: `abort_multipart_upload` with `key` and
+   `upload_id`. URLs expire after 1 hour (6 for video and multipart parts).
+3. `import_assets` with the same `brand_id`, a `run_label` (the collection
+   everything is filed under, e.g. "From pics.io") and `files`: up to 1,000 of
+   - `key`, `file_name`, and `source_ref`: a stable id for the file at its
+     source (e.g. `"picsio:<asset id>"`). A `source_ref` already imported into
+     the brand is linked, never copied again, so re-running is safe. Each may
+     appear once per call.
+   - optional `collections`: paths under `run_label`, e.g.
+     `[["Campaigns","Autumn"],["Selects"]]`; the file is filed in each.
+   - optional `tags` (up to 50), `lightboards`, and `extras`:
+     `{ origin: "picsio", description?, rating? (1–5), capturedAt?, details?:
+     [{label, value}], comments?: [{ref, author, at, text}] }`. Extras only fill
+     empty fields; a person's own edits win.
+
+   Optional `flatten_below_depth` (levels kept, 1 to 8) and
+   `include_lightboards` (default false). Returns `import_id`, `files`,
+   `already_imported` and `collection`.
+4. For more than 1,000 files, call again with the same `run_label`: the batches
+   join the same collection. At most two of your imports run at once; on
+   `imports_running`, poll `get_import_status` and send the batch again.
+
+Nothing is in the Library until `import_assets` runs. A PUT on its own does
+nothing.
 
 ## Rules that actually matter
 
@@ -152,5 +249,6 @@ it.
 | `does not accept reference images` | You passed `image_refs` to a model without `supportsImageInput`. Pick another; don't drop the reference. |
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
+| import refusals | Plain sentences: no Creator access on the brand, a guest account, the hourly cap on starting imports (it says how long to wait), out of storage, a selection too big. Relay them; don't work around them. |
 | `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, a member who doesn't manage it, or it's a Personal brand. |
 | `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
