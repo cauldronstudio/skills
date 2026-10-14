@@ -11,8 +11,9 @@ resize, or cut out images without leaving your editor.
 /plugin install cauldron@cauldron
 ```
 
-The install asks for your API key and stores it in your OS keychain. The plugin
-bundles the Cauldron MCP server and three skills: `cauldron`, `migrate` (move a Dropbox library into Cauldron) and `cauldron-docs` (read the user guides at docs.cauldron.studio).
+Then run `/mcp`, pick **cauldron**, and choose **Authenticate**. Cauldron opens
+in your browser: sign in, pick the studio, click **Allow**. No key to paste. The
+plugin bundles the Cauldron MCP server and three skills: `cauldron`, `migrate` (move a Dropbox library into Cauldron) and `cauldron-docs` (read the user guides at docs.cauldron.studio).
 
 ## Other agents (Cursor, Codex, and the rest)
 
@@ -21,13 +22,14 @@ npx skills add cauldronstudio/skills
 ```
 
 This installs the skill only. Connect the MCP server yourself: it's a streamable
-HTTP server at `https://app.cauldron.studio/api/mcp`, authenticated with an
-`Authorization: Bearer oc_…` header.
+HTTP server at `https://app.cauldron.studio/api/mcp`. Clients that support MCP
+sign-in (OAuth) need nothing else.
 
-## Getting a key
+## Clients without MCP sign-in
 
-In Cauldron, open **Profile → Connected AI Tools → Create key**. The key starts
-with `oc_` and is shown once. Each key is pinned to one studio.
+Use a personal key: in Cauldron, open **Profile → Connected AI Tools → Create
+key**. It starts with `oc_`, is shown once, and is pinned to one studio. Send it
+as an `Authorization: Bearer oc_…` header.
 
 The full guide covers what each tool does, what spends credits, and
 troubleshooting: https://docs.cauldron.studio/guides/connected-ai-tools/
