@@ -6,7 +6,7 @@ description: Generate images and work with a Cauldron studio from the terminal v
 # Cauldron
 
 The Cauldron MCP exposes a Cauldron studio as 28 tools. Everything is
-scoped to the (user, studio) pair the API key was minted for — no argument
+scoped to the (user, studio) pair the connection was made for — no argument
 reaches another studio's data.
 
 ## Setup
@@ -15,19 +15,20 @@ If the tools below aren't available, the MCP server isn't connected. This skill
 can be installed without it, so walk the user through connecting instead of
 guessing at tool calls.
 
-1. **Get a key.** Cauldron → **Profile → Connected AI Tools → Create key**. It
-   starts with `oc_` and is shown once. One key = one studio; working across
-   studios means a key per studio.
-2. **Connect.** Pick whichever fits the user's client:
+1. **Connect.** Pick whichever fits the user's client:
    - Claude Code plugin: `/plugin marketplace add cauldronstudio/skills`, then
-     `/plugin install cauldron@cauldron`. It prompts for the key and stores it
-     in the OS keychain.
+     `/plugin install cauldron@cauldron`. Nothing to fill in.
    - Claude Code without the plugin:
-     `claude mcp add --transport http cauldron https://app.cauldron.studio/api/mcp --header "Authorization: Bearer oc_…"`
+     `claude mcp add --transport http cauldron https://app.cauldron.studio/api/mcp`
    - Any other MCP client: a streamable HTTP server at
-     `https://app.cauldron.studio/api/mcp` with the header
-     `Authorization: Bearer oc_…`.
-3. **Restart or reconnect** the client so it picks up the tool list.
+     `https://app.cauldron.studio/api/mcp`, no header.
+2. **Sign in.** In Claude Code: `/mcp` → **cauldron** → **Authenticate**. A
+   browser opens Cauldron; the user signs in, picks the studio, and clicks
+   **Allow**. One connection = one studio; to switch, `/mcp` → **cauldron** →
+   **Clear authentication**, then authenticate again and pick the other one.
+3. **Clients without MCP sign-in** use a key instead: Cauldron → **Profile →
+   Connected AI Tools → Create key** (starts with `oc_`, shown once, pinned to
+   one studio), sent as `Authorization: Bearer oc_…`.
 
 Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 

@@ -1,7 +1,7 @@
 {
   "name": "cauldron",
-  "version": "1.6.0",
-  "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images, upload your own files, import folders from Dropbox, and manage brand and studio settings over the Cauldron MCP. 28 tools scoped to your user + studio by a personal API key. Ships skills covering the user docs, migrations, model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
+  "version": "1.7.0",
+  "description": "Cauldron in your terminal — generate images, search your Library, read brand kits, and upscale, extend, resize, or cut out images, upload your own files, import folders from Dropbox, and manage brand and studio settings over the Cauldron MCP. 28 tools scoped to your user + studio. Sign in with your Cauldron account, no key to paste. Ships skills covering the user docs, migrations, model choice, brand scoping, reference images, prompt craft, and the spend rules, so generations land in the right Library with the right kit applied instead of defaulting to Personal.",
   "author": {
     "name": "Cauldron",
     "url": "https://cauldron.studio"
@@ -9,21 +9,5 @@
   "homepage": "https://docs.cauldron.studio/guides/connected-ai-tools/",
   "repository": "https://github.com/cauldronstudio/skills",
   "license": "MIT",
-  "keywords": ["cauldron", "image-generation", "dam", "digital-asset-management", "brand-kit", "mcp"],
-  "userConfig": {
-    "cauldron_api_key": {
-      "type": "string",
-      "title": "Cauldron API key",
-      "description": "Personal key from Cauldron -> Profile -> Connected AI Tools -> Create key. Starts with oc_ and is shown once, so copy it then. A key is pinned to ONE studio: if you work in several, make one per studio. Revoke any time from the same card; leaving a studio kills its key automatically. Stored in your OS keychain, never in settings.json.",
-      "sensitive": true,
-      "required": true
-    },
-    "cauldron_url": {
-      "type": "string",
-      "title": "Cauldron studio URL",
-      "description": "Base URL of the studio the MCP tools talk to. Leave the default.",
-      "default": "https://app.cauldron.studio",
-      "required": false
-    }
-  }
+  "keywords": ["cauldron", "image-generation", "dam", "digital-asset-management", "brand-kit", "mcp"]
 }
