@@ -169,8 +169,15 @@ API, a drive of shoots), or anything too big for `upload_asset`.
    Optional `flatten_below_depth` (levels kept, 1 to 8) and
    `include_lightboards` (default false). Returns `import_id`, `files`,
    `already_imported` and `collection`.
-4. For more than 1,000 files, call again with the same `run_label`: the batches
-   join the same collection. At most two of your imports run at once; on
+
+   `source` is `"agent"` (the default) or `"picsio"`. Pass `"picsio"` only
+   when the files came from a pics.io export, so `source_ref`
+   `"picsio:<asset id>"` matches in-app pics.io imports into the same brand and
+   nothing is copied twice. Otherwise leave it out. Duplicates are only found
+   within one source, so use the same value on every call of a run.
+4. For more than 1,000 files, call again with the same `run_label` and
+   `source`: the batches join the same collection. A label only adds to a
+   collection an earlier run from the same source made. At most two of your imports run at once; on
    `imports_running`, poll `get_import_status` and send the batch again.
 
 Nothing is in the Library until `import_assets` runs. A PUT on its own does
