@@ -108,7 +108,7 @@ the person opens the `connectUrl` the tools return (the brand's
 in pics.io under **avatar → My account → Security**. No pics.io admin needed.
 Never ask for the token in chat. Guests can't import.
 
-1. `picsio_status` with `brand_id` (a brand id or `"personal"`). `connected:
+1. `picsio_status` with `brand_id` (from `list_brands`). `connected:
    false` or `needsReconnect: true`: relay `connectUrl`, wait, check again.
 2. `picsio_scan` with `brand_id`, and `roots` (pics.io collection ids) to read
    only part of the library; omit for all of it. Returns `scanId`.
@@ -142,7 +142,7 @@ If the person's pics.io plan has no API access, use files on disk instead.
 For a library that's already on this machine (an export from a service with no
 API, a drive of shoots), or anything too big for `upload_asset`.
 
-1. `presign_uploads` with `brand_id` (omit for Personal) and `files`: up to
+1. `presign_uploads` with `brand_id` (from `list_brands`) and `files`: up to
    1,000 of `{ file_name, size, mime_type? }`, `size` exact in bytes. Returns
    `uploads` (each with a `key`) and `rejected` (unsupported type or over the
    size limit, with a reason; skip those, the rest still go).
@@ -191,12 +191,24 @@ permission prompt you see IS the spend confirmation — don't add ceremony on to
 of it, but don't fan out counts speculatively either. Default `count` to 1
 unless variations were asked for.
 
-### 2. Pass `brand_id`, or it lands in Personal
-Omitting `brand_id` sends the asset to the caller's **Personal** brand and
-applies no kit. For any client work that's wrong twice over: the asset is in the
-wrong Library, and the brand's prompt prefix/suffix, banned terms, and palette
-never applied. Call `list_brands` → pass the id. `get_brand` if you need to see
-the kit before writing the prompt.
+### 2. Every write names a brand: call `list_brands` first
+Everything you generate, upload or import lands in one brand's Library, and
+that brand's kit (prompt prefix/suffix, banned terms, palette) applies. So
+before `generate_image`, `upload_asset`, `presign_uploads`, `import_assets`,
+`dropbox_preview`/`dropbox_import` or `picsio_status`/`picsio_scan`, call
+`list_brands` and pass the right one as `brand_id`. `get_brand` shows the kit
+if you need it before writing the prompt.
+
+- **Exactly one brand you can add to:** you may leave `brand_id` out and that
+  brand is used. Passing it anyway is never wrong.
+- **More than one:** leaving it out is refused with `brand_required`, and the
+  refusal's `brands` lists them (id and name). Ask the person which brand the
+  work is for; don't guess from the list.
+- **`"personal"`** is not a brand id and is refused with `brand_required`.
+  There is no fallback brand.
+- **No brand in the studio yet:** every write is refused with `no_brand`
+  (status 409). Tell the person to open the app (`appUrl`) and create their
+  first brand, then try again. You can't create one for them.
 
 ### 3. Choose the model, don't accept the default
 `list_models` returns a browse view (id, provider, cost, `bestFor[]`).
@@ -250,6 +262,10 @@ it.
 | Error | Meaning |
 |---|---|
 | `billing_inactive` | Studio billing is off. Every spend tool refuses; reads and `resize_image` still work. |
+| `brand_required` (400) | No `brand_id` and you can add to more than one brand (pick from `brands` in the refusal, asking the person), or you passed `"personal"`. |
+| `no_brand` (409) | The studio has no brand yet. The person opens the app (`appUrl`) and creates their first brand. |
+| `brand_not_found` (404) | That `brand_id` isn't a brand in this studio. Call `list_brands`. |
+| `forbidden` (403, on a write) | You don't have Creator access on that brand, or on any brand when `brand_id` was left out. A brand manager can grant it. |
 | `unauthorized` | Key revoked, or you were removed from the studio. Mint a new one. |
 | daily limit | Same per-user generation cap as the web app. Resets daily. |
 | async/video refusal | Model isn't sync-image. The message lists valid ones. |
@@ -257,5 +273,5 @@ it.
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
 | import refusals | Plain sentences: no Creator access on the brand, a guest account, the hourly cap on starting imports (it says how long to wait), out of storage, a selection too big. Relay them; don't work around them. |
-| `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, a member who doesn't manage it, or it's a Personal brand. |
+| `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, or a member who doesn't manage it. |
 | `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
