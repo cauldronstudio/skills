@@ -1,11 +1,11 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 33 tools, 38 when the server has
+The Cauldron MCP exposes a Cauldron studio as 34 tools, 39 when the server has
 pics.io import turned on. Everything is scoped to the (user, studio) pair the
 connection was made for — no argument reaches another studio's data.
 
@@ -50,6 +50,31 @@ file, up to 10 MB), plus `brand_id` and optional `tags`. It returns the new
 `asset_id`. The same URL into the same brand twice returns the existing asset
 (`reused: true`). This is how "resize our logo to 1200×1200" works end to end:
 `upload_asset` → `resize_image`.
+
+**Edit an asset** (free, no spend) — `update_asset` changes an asset that is
+already in the Library: its `tags`, `title` or `description`. Pass `asset_id`
+(from `search`, `get_recent_generations` or an upload) and only what changes:
+
+- `tags: { add, remove }` edits the current set; `tags: { set }` replaces it
+  (`set: []` removes every tag). `set` can't be combined with `add`/`remove`.
+- Names match existing tags ignoring case and punctuation ("Spring Sale" and
+  "spring-sale" are one tag), the brand's own tag first. A new name becomes a
+  studio tag. Removing a tag the asset doesn't carry is ignored.
+- `title: null` clears the title; a blank or `null` `description` clears it.
+- It returns the asset's `brand`, `title`, `description` and `tags` after the
+  change, so you don't need a read to confirm. Same input twice changes
+  nothing.
+
+"Tag the spring shots `outdoor` and drop `needs-retouch`": `search` with
+`query: "spring"`, show the hits, then one call per asset the person confirms:
+
+```json
+{ "asset_id": "…", "tags": { "add": ["outdoor"], "remove": ["needs-retouch"] } }
+```
+
+Who can: the people who can edit the asset in the Library (creators and brand
+managers on its brand, studio owners and admins). Asset-at-a-time; there is no
+bulk form, so for many assets loop and report what changed.
 
 **Imports** (free, no spend). Every import runs on Cauldron's servers in the
 background and returns an import id at once. Files land as drafts. Use the
@@ -272,6 +297,7 @@ it.
 | `does not accept reference images` | You passed `image_refs` to a model without `supportsImageInput`. Pick another; don't drop the reference. |
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
+| `update_asset` refusal | "Asset not found": wrong id, or the asset is in another studio; find it with `search`. "can't edit": no creator or manager role on the asset's brand. A tag name with no letter or digit is refused before anything is written. |
 | import refusals | Plain sentences: no Creator access on the brand, a guest account, the hourly cap on starting imports (it says how long to wait), out of storage, a selection too big. Relay them; don't work around them. |
 | `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, or a member who doesn't manage it. |
 | `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
