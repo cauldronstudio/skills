@@ -1,6 +1,6 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library, look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library (including by describing what's in an image, or finding look-alikes of an asset), look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
@@ -37,6 +37,26 @@ Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 **Reads** (free, no spend): `get_context`, `search`, `list_brands`, `get_brand`,
 `list_models`, `get_model_details`, `get_recent_generations`, `get_brew`,
 `show_generation`.
+
+**Finding assets.** `search` (scope `library` or `references`) matches by
+meaning as well as by words, so pass a plain description of what's in the
+image: `"ceramic candles in earthy colors"` finds "Four ceramic candle vessels
+in terracotta…" though its name never says "earthy". It covers what the
+person can see in the Library: their own assets plus teammates' non-private
+ones on brands they belong to (owners and admins see the whole studio).
+`filters.brandId` narrows to one brand. Each hit carries `brand`, a `snippet`,
+`match` (`lexical`, `semantic` or `both`) and, when found by meaning,
+`similarity` (cosine, higher is closer). `mode` is `hybrid` (default),
+`keyword` (exact words only) or `semantic`. If the embedding service is down,
+`hybrid` quietly falls back to keywords. Read the `note`: "Nothing matched"
+or "Nothing matched well" means the hits (if any) are poor; try broader
+words or drop `filters.brandId` before telling the person there's nothing.
+
+"More like this one": `search` with `similar_to: { asset_id }` ranks by how
+that asset looks (`query` is then optional; give both and they rank
+together). `notIndexed: true` means that asset hasn't been indexed yet; try
+again later rather than reading it as "no matches". `show_generation` with an
+`asset_id` shows any asset `search` returned.
 
 **Transforms** — act on an `asset_id` you already own and save the result back
 to the Library as a new asset: `upscale_image`, `remove_background`,
