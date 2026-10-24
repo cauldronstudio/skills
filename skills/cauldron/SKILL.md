@@ -44,7 +44,10 @@ image: `"ceramic candles in earthy colors"` finds "Four ceramic candle vessels
 in terracotta…" though its name never says "earthy". It covers what the
 person can see in the Library: their own assets plus teammates' non-private
 ones on brands they belong to (owners and admins see the whole studio).
-`filters.brandId` narrows to one brand. Each hit carries `brand`, a `snippet`,
+`filters.brandId` narrows to one brand. `filters.sort: "recent"` orders newest
+first, and with no `query` lists the newest additions (uploads and imports
+included): use it for "what did I add most recently". Each hit carries
+`brand`, `createdAt`, a `snippet`,
 `match` (`lexical`, `semantic` or `both`) and, when found by meaning,
 `similarity` (cosine, higher is closer). `mode` is `hybrid` (default),
 `keyword` (exact words only) or `semantic`. The last word also matches as a
