@@ -47,10 +47,16 @@ ones on brands they belong to (owners and admins see the whole studio).
 `filters.brandId` narrows to one brand. Each hit carries `brand`, a `snippet`,
 `match` (`lexical`, `semantic` or `both`) and, when found by meaning,
 `similarity` (cosine, higher is closer). `mode` is `hybrid` (default),
-`keyword` (exact words only) or `semantic`. If the embedding service is down,
-`hybrid` quietly falls back to keywords. Read the `note`: "Nothing matched"
-or "Nothing matched well" means the hits (if any) are poor; try broader
-words or drop `filters.brandId` before telling the person there's nothing.
+`keyword` (exact words only) or `semantic`. The last word also matches as a
+prefix, so a half-typed "cand" finds "candle".
+
+Weak matches by meaning are left out, so an empty result with the note
+"Nothing matched closely enough" is a real answer: "do I have a red sports
+car shot?" → no. Try broader words or drop `filters.brandId` once, then
+say so. The exception is `semanticUnavailable: true`: matching by meaning
+was down, so hybrid hits are keyword-only and a `semantic` search ran on
+nothing. Then say search is degraded and retry shortly (or use `keyword`);
+never report "nothing found".
 
 "More like this one": `search` with `similar_to: { asset_id }` ranks by how
 that asset looks (`query` is then optional; give both and they rank

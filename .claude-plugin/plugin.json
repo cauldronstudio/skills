@@ -1,6 +1,6 @@
 {
   "name": "cauldron",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Cauldron in your terminal — generate images, search your Library by describing what's in an image or by look-alike, read brand kits, and upscale, extend, resize, or cut out images, upload your own files, edit an asset's tags, title and description, import from Dropbox, pics.io or files on disk, and manage brand and studio settings over the Cauldron MCP. Up to 39 tools scoped to your user + studio. Sign in with your Cauldron account, no key to paste. Ships skills covering the user docs, migrations, model choice, brand scoping, reference images, prompt craft, and the spend rules, so every generation, upload and import names a brand and lands in that brand's Library with its kit applied.",
   "author": {
     "name": "Cauldron",
