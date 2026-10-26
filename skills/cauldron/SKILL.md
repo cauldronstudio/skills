@@ -1,11 +1,11 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library (including by describing what's in an image, or finding look-alikes of an asset), look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library (including by describing what's in an image, or finding look-alikes of an asset), look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, list or delete the studio's tags, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 34 tools, 39 when the server has
+The Cauldron MCP exposes a Cauldron studio as 36 tools, 41 when the server has
 pics.io import turned on. Everything is scoped to the (user, studio) pair the
 connection was made for — no argument reaches another studio's data.
 
@@ -104,6 +104,26 @@ already in the Library: its `tags`, `title` or `description`. Pass `asset_id`
 Who can: the people who can edit the asset in the Library (creators and brand
 managers on its brand, studio owners and admins). Asset-at-a-time; there is no
 bulk form, so for many assets loop and report what changed.
+
+**Tags** (free, no spend). `list_tags` lists the studio's tags the person can
+see, as on the Library's Tags page: each with `id`, `name`, `scope`
+(`"studio"` or the brand's name), `brandId`, `category`, `usageCount` (how many
+assets carry it) and `needsReview` (an AI suggestion nobody has reviewed yet).
+Owners and admins see every tag; anyone else sees the tags on their brands plus
+studio-wide ones. Narrow it with `brand_id`, `query` (matches name, slug or
+category) or `include_review_queue: false`. Use it to answer "what tags do we
+have", to spot near-duplicates, and to get a `tag_id`.
+
+`delete_tag` takes `{ "tag_id": "…" }` and deletes that tag for good. It is
+irreversible and detaches the tag from every asset that carries it, so before
+calling it show the person the tag's name, scope and `usageCount` and get a
+clear yes. Call it once per tag, never in a loop the person hasn't approved.
+It returns `{ ok: true, id, name, detachedFrom }`, where `detachedFrom` is the
+number of assets it was removed from. To take a tag off just a few assets, use
+`update_asset` with `tags.remove` instead.
+
+Who can delete: brand managers for their brand's tags, studio owners and admins
+for every tag (a studio-wide tag is theirs only). Guests never.
 
 **Imports** (free, no spend). Every import runs on Cauldron's servers in the
 background and returns an import id at once. Files land as drafts. Use the
@@ -327,6 +347,7 @@ it.
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
 | `update_asset` refusal | "Asset not found": wrong id, or the asset is in another studio; find it with `search`. "can't edit": no creator or manager role on the asset's brand. A tag name with no letter or digit is refused before anything is written. |
+| `delete_tag` refusal | "Not found": wrong id, or the tag is in another studio; get the id from `list_tags`. "Forbidden": no manager role on the tag's brand (or not a studio admin, for a studio-wide tag). Nothing was deleted. |
 | import refusals | Plain sentences: no Creator access on the brand, a guest account, the hourly cap on starting imports (it says how long to wait), out of storage, a selection too big. Relay them; don't work around them. |
 | `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, or a member who doesn't manage it. |
 | `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
