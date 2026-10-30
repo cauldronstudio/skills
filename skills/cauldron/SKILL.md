@@ -1,13 +1,15 @@
 ---
 name: cauldron
-description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library (including by describing what's in an image, or finding look-alikes of an asset), look up a brand kit, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, list or delete the studio's tags, import or migrate a library (Dropbox, pics.io, or files on disk), list a shared collection's links, read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
+description: Generate images and work with a Cauldron studio from the terminal via the Cauldron MCP. Use when asked to generate/create an image, make a visual, search the Cauldron Library (including by describing what's in an image, filtering by tag, status, rating, person, collection or date, or finding look-alikes of an asset), look up a brand kit or a template, list or compare image models, show a recent generation, generate from a reference image, upscale/extend/resize an image or remove its background, upload a file or logo into the Library, change an existing asset's tags, title or description, list or delete the studio's tags, create collections and file assets into them, save or run a saved Library view, share a collection, project or asset by link (create, list, change or turn off share links), import or migrate a library (Dropbox, pics.io, or files on disk), read or change brand or studio settings (name, Slack channel, prompt prefix/suffix, banned terms), polish a prompt, or when Cauldron/the studio is mentioned. Also use before any generate_image call to get model choice, brand scoping, and spend rules right.
 ---
 
 # Cauldron
 
-The Cauldron MCP exposes a Cauldron studio as 36 tools, 41 when the server has
-pics.io import turned on. Everything is scoped to the (user, studio) pair the
-connection was made for — no argument reaches another studio's data.
+The Cauldron MCP exposes a Cauldron studio as 48 tools, plus 5 saved-view
+tools when the server has saved views turned on and 5 pics.io tools when it
+has pics.io import turned on (58 in all). Everything is scoped to the (user,
+studio) pair the connection was made for — no argument reaches another
+studio's data.
 
 ## Setup
 
@@ -35,23 +37,43 @@ Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 ## The tools
 
 **Reads** (free, no spend): `get_context`, `search`, `list_brands`, `get_brand`,
-`list_models`, `get_model_details`, `get_recent_generations`, `get_brew`,
-`show_generation`.
+`list_models`, `get_model_details`, `get_recent_generations`, `get_template`,
+`show_generation`. `get_template` takes `templateIdOrSlug` and returns a saved
+or built-in template's name, blurb, steps, visibility, brand and slug; find
+one with `search` scope `templates`. (`get_brew`, with `brewIdOrSlug`, is a
+deprecated alias kept for one release: brews became templates with the same
+ids and slugs. Don't use it in new work.)
 
-**Finding assets.** `search` (scope `library` or `references`) matches by
-meaning as well as by words, so pass a plain description of what's in the
-image: `"ceramic candles in earthy colors"` finds "Four ceramic candle vessels
-in terracotta…" though its name never says "earthy". It covers what the
-person can see in the Library: their own assets plus teammates' non-private
-ones on brands they belong to (owners and admins see the whole studio).
-`filters.brandId` narrows to one brand. `filters.sort: "recent"` orders newest
-first, and with no `query` lists the newest additions (uploads and imports
-included): use it for "what did I add most recently". Each hit carries
-`brand`, `createdAt`, a `snippet`,
-`match` (`lexical`, `semantic` or `both`) and, when found by meaning,
-`similarity` (cosine, higher is closer). `mode` is `hybrid` (default),
-`keyword` (exact words only) or `semantic`. The last word also matches as a
-prefix, so a half-typed "cand" finds "candle".
+**Finding assets.** `search` takes a `scope`: `library` (any asset the person
+can see), `references` (uploaded references), `collections` (projects too,
+flagged `isProject: true`), `templates` or `loras`. For `library` and
+`references` it matches by meaning as well as by words, so pass a plain
+description of what's in the image: `"ceramic candles in earthy colors"` finds
+"Four ceramic candle vessels in terracotta…" though its name never says
+"earthy". It covers what the person can see in the Library: their own assets
+plus teammates' non-private ones on brands they belong to (owners and admins
+see the whole studio). `filters.brandId` narrows to one brand.
+`filters.sort: "recent"` orders newest first, and with no `query` lists the
+newest additions (uploads and imports included): use it for "what did I add
+most recently". `filters.source` narrows to `generated`, `uploaded` or
+`imported` (one or a list): "the latest generations" = `sort: "recent"` +
+`source: "generated"`, no query. `filters` also takes the Library's own
+filters, the same fields a saved view holds: `tags` (names or ids) with
+`tag_match` `any`|`all`, `status[]` (`draft`, `in_review`, `approved`,
+`rejected`, `retired`), `rating[]` (1–5), `made_by` (a person's name or
+email), `collections` (names or ids), `uploaded_from`/`uploaded_to`
+(YYYY-MM-DD, `by_capture_date: true` reads them as capture dates), `lens`
+(`recent` = last 7 days, `unfiled` = in no collection), `media_type`,
+`format[]`, `orientation`. Names resolve inside the brand; an unknown or
+ambiguous name fails with `candidates`, so pick one and retry rather than
+guessing. With filters and no query it lists the newest matches: "approved
+hero shots since September" = `{ status: ["approved"], tags: ["hero"],
+uploaded_from: "2026-09-01" }`. Each hit carries `brand`, `createdAt`, a
+`snippet`, an AI-written `caption` of what is visible (when one exists; it
+may be wrong), `match` (`lexical`, `semantic` or `both`) and, when found by
+meaning, `similarity` (cosine, higher is closer). `mode` is `hybrid`
+(default), `keyword` (exact words only) or `semantic`. The last word also
+matches as a prefix, so a half-typed "cand" finds "candle".
 
 Weak matches by meaning are left out, so an empty result with the note
 "Nothing matched closely enough" is a real answer: "do I have a red sports
@@ -125,6 +147,57 @@ number of assets it was removed from. To take a tag off just a few assets, use
 Who can delete: brand managers for their brand's tags, studio owners and admins
 for every tag (a studio-wide tag is theirs only). Guests never.
 
+**Collections** (free, no spend). Collections belong to a brand, as in the
+Library's collection tree. Before tagging, titling or filing a brand's assets,
+read `brand_instructions` from `get_brand` and follow it.
+
+- `list_collections` lists the ones the person can see: each with `id`,
+  `name`, `description`, `brand_id` and `asset_count`. Narrow with `brand_id`.
+  Use it to get a `collection_id` for the tools below.
+- `create_collection` takes `brand_id`, `name` (up to 80 characters) and an
+  optional `description` (up to 500). A collection with the same name on that
+  brand is returned instead of a duplicate (`created: false`).
+- `update_collection` takes `collection_id` and `name` and/or `description`
+  (`null` clears it). Its brand, place in the tree and URL slug can't be
+  changed here. Returns the collection after the change.
+- `add_to_collection` / `remove_from_collection` take `collection_id` and
+  `asset_ids` (from `search` or `get_recent_generations`, up to 100 per call).
+  Both are safe to repeat: add returns `added`, `already_present`, `not_found`
+  (not in this studio, or another brand's asset where the collection only takes
+  its own) and `forbidden`; remove returns `removed`, `not_present`,
+  `not_found` and `forbidden`. Filing a private draft shares it with the brand.
+  Removing never deletes the asset.
+- `delete_collection` takes `collection_id` and deletes the collection and any
+  sub-collections for good; the assets stay in the Library. Confirm with the
+  person first. Returns `deleted_ids`.
+
+Who can: a creator on the brand, or a studio owner or admin. Guests and other
+members get `forbidden`.
+
+**Saved views** (free, no spend; listed only when the server has saved views
+turned on). A view is a named Library filter set ("Approved hero shots") that
+only the person who saved it sees.
+
+- `list_views` lists them: id, name, brand, author, `createdVia` (`library`,
+  `assistant` or `mcp`), the filters in plain words and a Library link.
+  `brand_id` (id, name or slug) narrows to one brand; omit it for every brand.
+- `apply_view` runs one (`view_id`, optional `limit`): returns the view,
+  `total` (the count the Library shows), the newest matches shaped like
+  `search` hits, and `libraryUrl`.
+- `save_view` takes `name` and `filters` (the same fields `search` takes:
+  `tags`, `status`, `source`, `rating`, `made_by`, `collections`,
+  `uploaded_from`/`uploaded_to`, `lens`, `media_type`, `format`,
+  `orientation`, `query`); `brand_id` picks a brand, and omitting it saves on
+  All brands. A tag, collection or person that matches nothing or several
+  fails with `candidates`: ask which one. Returns the view, its match count
+  and a Library link. `from_page: true` only works inside the app's Assistant
+  (it reads the open Library page); over MCP pass `filters`.
+- `update_view` takes `view_id` plus a new `name`, new `filters` (replacing
+  all the old ones) or `as_collection: true`/`false` to show it (or stop
+  showing it) as a smart collection on the Collections page.
+- `delete_view` takes `view_id`. Only the view goes; the files stay. Confirm
+  first.
+
 **Imports** (free, no spend). Every import runs on Cauldron's servers in the
 background and returns an import id at once. Files land as drafts. Use the
 `migrate` skill for the Dropbox flow; any import starts only after the person
@@ -144,19 +217,51 @@ confirms what it will do.
   `cancel_import` (files already imported stay; ask the person first). They
   take `import_id`.
 
-**Share links** (free) — `list_shared_collection` with a `collection_id` (from
-`search`) lists every asset on a collection's share link with a `previewUrl` (a
-small JPEG that works in a Google Sheets `=IMAGE()`) and a `downloadUrl` (the
-original; null until the asset is approved). The links don't expire; they stop
-when the share link is turned off or reset. The collection must already be
-shared in Cauldron and you must be able to manage it.
+**Share links** (free, no spend) — what Cauldron's Settings → Shared links
+shows. A share link publishes a collection, project or one asset to anyone
+holding the URL, no Cauldron account needed; drafts never show. Only create
+one when the person asks to share, never as a convenience, and hand the URL to
+them rather than posting it anywhere. You need a creator or manager role on
+the brand for all of these.
+
+- `list_shares` takes `brand_id` (from `list_brands`) and lists the brand's
+  links newest first: `shareId`, what it shows (`kind` `collection`, `project`
+  or `asset`, name, `targetId`), URL, approved-only, downloads, password
+  on/off, note, who made it, open count and expiry (expired links stay
+  listed). `mine: true` narrows to links you made; `collection_id` or
+  `asset_id` narrows to that one target's link.
+- `get_share` reads one link by `share_id`.
+- `create_share` takes exactly one of `collection_id` (a project id works too)
+  or `asset_id`, plus options: `expires_at` (ISO 8601, at most 365 days out;
+  `null` never expires; a new link without it ends after 30 days, sooner if an
+  asset's license ends first), `password` (4–200 characters, people must type
+  it, never returned; `null` for none), `allow_download` (lets people download
+  approved work), `visibility` (`approved` shows approved work only; `status`
+  shows everything but drafts, each with its status) and `note` (shown under
+  the title). On a brand that allows mature content you must decide: pass a
+  `password`, or `password: null` to publish without one. If the target already
+  has a live link you get that link back (`created: false`) with only the
+  settings you passed changed. Returns `shareId` and `url`.
+- `update_share` takes `share_id` and at least one of the options above; the
+  URL stays the same and omitted settings are kept.
+- `revoke_share` takes `share_id` and turns the link off for good: everyone
+  holding the URL loses access and it can't be turned back on (sharing the
+  same thing again makes a new URL). Confirm with the person first. Returns
+  what the link showed and `wasLive`.
+- `list_shared_collection` with a `collection_id` (from `search` scope
+  `collections`) lists every asset on a collection's share link with a
+  `previewUrl` (a small JPEG that works in a Google Sheets `=IMAGE()`) and a
+  `downloadUrl` (the original; null until the asset is approved). The links
+  don't expire; they stop when the share link is turned off or reset. The
+  collection must already be shared and you must be able to manage it.
 
 **Settings** (free, no spend) — `get_settings` returns your role, the brands
 you can edit (name, description, website, location, self-approval, Slack
 channel, video, community flags, prompt prefix/suffix, banned terms), whether
 Slack is connected, and the studio settings (owners and admins only). Pass
 `brand_id` for one brand. `update_brand_settings` takes `brand_id` plus only the
-fields to change; slug, NSFW, colours and the rest of the guide are refused.
+fields to change; slug, the mature-content switch (`allow_nsfw`), colors and
+the rest of the guide are refused.
 `update_studio_settings` takes `name` and/or `slack_channel_id`, always for the
 key's own studio.
 
@@ -348,6 +453,10 @@ it.
 | `upload_asset` refusal | Plain words: wrong file type (name it with a real extension), over the size limit, no Creator access on the brand, or the URL couldn't be fetched (https on a public host only; private and local addresses are blocked). Host larger files and pass `url`. |
 | `update_asset` refusal | "Asset not found": wrong id, or the asset is in another studio; find it with `search`. "can't edit": no creator or manager role on the asset's brand. A tag name with no letter or digit is refused before anything is written. |
 | `delete_tag` refusal | "Not found": wrong id, or the tag is in another studio; get the id from `list_tags`. "Forbidden": no manager role on the tag's brand (or not a studio admin, for a studio-wide tag). Nothing was deleted. |
+| collection refusal | "Collection not found": wrong id, or another studio's; call `list_collections`. "forbidden": no creator role on that brand (or not a studio owner or admin); guests never. "Collections aren't available on this server": the Library is off on this server. |
+| share refusal | "Pass exactly one of collection_id or asset_id" on `create_share`; `expires_at` in the past or over 365 days out; a password outside 4–200 characters; no creator or manager role on the brand; "not found" for a `share_id` from another studio or a link already turned off. Nothing was changed. |
+| view refusal | Views are off on this server (the tools aren't listed either); `view_id` not yours or not found (call `list_views`); a tag, collection or person name that matched nothing or several (`candidates` lists them: ask, then retry); `from_page` over MCP ("There's no Library page in view"): pass `filters`. |
+| `get_template` not found | Wrong id or slug, or a template you can't read. Find it with `search` scope `templates`. |
 | import refusals | Plain sentences: no Creator access on the brand, a guest account, the hourly cap on starting imports (it says how long to wait), out of storage, a selection too big. Relay them; don't work around them. |
 | `forbidden` (settings) | You can't edit that brand or the studio: you're a guest, or a member who doesn't manage it. |
 | `slack: …` | The test post to the new channel failed, usually because the bot isn't invited or the ID is wrong. Nothing was saved. |
