@@ -36,7 +36,13 @@ Full guide: https://docs.cauldron.studio/guides/connected-ai-tools/
 
 **Reads** (free, no spend): `get_context`, `search`, `list_brands`, `get_brand`,
 `list_models`, `get_model_details`, `get_recent_generations`, `get_brew`,
-`show_generation`.
+`show_generation`, `list_products`, `get_product`.
+
+**Products.** A brand's products (what it sells) are `list_products` and
+`get_product`, with `brand_id` from `list_brands`. `get_product` gives what
+the product is, its facts, whether it's trained, its open issues, and its
+store page: the approved images that aren't on the store yet and how many
+drafts are waiting.
 
 **Finding assets.** `search` (scope `library` or `references`) matches by
 meaning as well as by words, so pass a plain description of what's in the
