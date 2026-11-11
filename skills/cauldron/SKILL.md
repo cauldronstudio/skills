@@ -87,7 +87,7 @@ file, up to 10 MB), plus `brand_id` and optional `tags`. It returns the new
 `upload_asset` → `resize_image`.
 
 **Edit an asset** (free, no spend) — `update_asset` changes an asset that is
-already in the Library: its `tags`, `title` or `description`. Pass `asset_id`
+already in the Library: its `tags`, `title`, `description` or `restricted` mark. Pass `asset_id`
 (from `search`, `get_recent_generations` or an upload) and only what changes:
 
 - `tags: { add, remove }` edits the current set; `tags: { set }` replaces it
@@ -96,6 +96,8 @@ already in the Library: its `tags`, `title` or `description`. Pass `asset_id`
   "spring-sale" are one tag), the brand's own tag first. A new name becomes a
   studio tag. Removing a tag the asset doesn't carry is ignored.
 - `title: null` clears the title; a blank or `null` `description` clears it.
+- `restricted: { note?, startsAt?, endsAt? }` marks the asset Restricted (dates
+  are `YYYY-MM-DD`; `{}` = no note or dates); `restricted: null` clears it.
 - It returns the asset's `brand`, `title`, `description` and `tags` after the
   change, so you don't need a read to confirm. Same input twice changes
   nothing.
@@ -106,6 +108,15 @@ already in the Library: its `tags`, `title` or `description`. Pass `asset_id`
 ```json
 { "asset_id": "…", "tags": { "add": ["outdoor"], "remove": ["needs-retouch"] } }
 ```
+
+**Restricted assets and ratings.** `search`, `get_recent_generations` and
+`update_asset` return `restricted: { note, endsAt }` on an asset whose
+restriction is in effect today. Never pick a restricted asset for posting,
+sharing or a template run; say it is restricted and give the note. To list
+them, pass `filters: { restricted: true }` to `search` (`false` excludes them).
+Assets with a star `rating` also carry `ratingMeaning`: 1 Reject, 2 Keep, don't
+use, 3 Usable with work, 4 Ready, 5 Hero. Treat 4 and up as publishable; stars
+measure quality only, not permission.
 
 Who can: the people who can edit the asset in the Library (creators and brand
 managers on its brand, studio owners and admins). Asset-at-a-time; there is no
@@ -242,7 +253,7 @@ API, a drive of shoots), or anything too big for `upload_asset`.
    - optional `collections`: paths under `run_label`, e.g.
      `[["Campaigns","Autumn"],["Selects"]]`; the file is filed in each.
    - optional `tags` (up to 50), `lightboards`, and `extras`:
-     `{ origin: "picsio", description?, rating? (1–5), capturedAt?, details?:
+     `{ origin: "picsio", description?, rating? (1–5), restricted?: { note?, startsAt?, endsAt? }, capturedAt?, details?:
      [{label, value}], comments?: [{ref, author, at, text}] }`. Extras only fill
      empty fields; a person's own edits win.
 
