@@ -358,7 +358,7 @@ it.
 | `brand_not_found` (404) | That `brand_id` isn't a brand in this studio. Call `list_brands`. |
 | `forbidden` (403, on a write) | You don't have Creator access on that brand, or on any brand when `brand_id` was left out. A brand manager can grant it. |
 | `unauthorized` | Key revoked, or you were removed from the studio. Mint a new one. |
-| daily limit | Same per-user generation cap as the web app. Resets daily. |
+| out of credits or monthly allowance | Generation is limited only by the studio's credit balance and any monthly allowance an admin sets. Relay the refusal; an admin tops up credits or raises the allowance. |
 | async/video refusal | Model isn't sync-image. The message lists valid ones. |
 | `does not accept reference images` | You passed `image_refs` to a model without `supportsImageInput`. Pick another; don't drop the reference. |
 | `image_ref … not_found` | The asset isn't in this studio (or the id is wrong). |
